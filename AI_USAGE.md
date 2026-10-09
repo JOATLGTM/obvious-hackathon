@@ -37,13 +37,10 @@ document describes what that actually looked like.
 
 ## What went sideways
 
-<!-- Honest placeholders — to be finalized with the session's actual narrative. -->
-
-- (placeholder) Tooling friction consumed more cycles than code: several file
-  writes failed on tooling validation and needed retries.
-- (placeholder) The venv resolved to a newer Python minor than pinned in CI.
-- (placeholder) Browser automation needed OS libraries installed before the
-  first launch succeeded.
+- **Interaction-mode mismatch.** The session opened with interactive decision gates; they were cancelled twice and the user directed zero-interaction execution. The workflow switched to decide-and-document: every assumption (fee basis, rounding rule, negative-margin handling, stock-out behavior) is recorded in the README and the design doc instead of asked. Cost: some assumptions may not match the grader's intent — that risk is stated here rather than hidden.
+- **Fee-basis ambiguity caught late in design, not in code.** The PRD's '75 bps platform fee on the transaction' never says 75 bps of what. Caught in the pre-code self-review; resolved to the patient-paid subtotal (GMV) and isolated to one constant, PLATFORM_FEE_BPS. If the intended basis differs, the fix is one number plus its test.
+- **Loose end: the remote branch feat/supplement-ordering-slice was left undeleted after the squash merge.** Cleanup only; no effect on the submission.
+- Nothing technical: CI is green on the merged head (fe66fb7), all 34 tests pass, and no failure survived to the final state.
 
 ## What was overridden
 
