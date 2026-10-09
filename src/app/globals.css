@@ -1,32 +1,92 @@
+/*
+ * Supplement Ops — design system.
+ *
+ * Direction: "clinical ledger". Warm paper neutrals tinted toward green,
+ * a committed deep-clinical-green accent, engraved serif display (Fraunces),
+ * engineering-grade numerals (IBM Plex Mono) for every figure. The split
+ * receipt is styled as a physical printed artifact — the audit surface is
+ * the product.
+ *
+ * Money discipline: every figure renders in Plex Mono with tabular
+ * numerals, right-aligned in tables. No #000, no #fff — neutrals are tinted.
+ */
+
 :root {
-  --paper: #f7f7f5;
-  --surface: #ffffff;
-  --ink: #1a1d21;
-  --muted: #6b7280;
-  --border: #e4e4e0;
-  --accent: #1a7f5a;
-  --accent-ink: #ffffff;
-  --danger: #b4232a;
-  --chip-draft-bg: #fdf3d8;
-  --chip-draft-ink: #7a5b10;
-  --chip-paid-bg: #d8f2e4;
-  --chip-paid-ink: #14532d;
+  /* Paper + ink (warm, green-tinted neutrals) */
+  --paper: oklch(0.962 0.008 90);
+  --paper-deep: oklch(0.935 0.012 95);
+  --surface: oklch(0.99 0.004 90);
+  --ink: oklch(0.25 0.02 150);
+  --muted: oklch(0.43 0.022 150);
+  --faint: oklch(0.55 0.018 150);
+  --border: oklch(0.895 0.01 95);
+  --border-strong: oklch(0.795 0.015 100);
+
+  /* Committed accent: deep clinical green */
+  --accent: oklch(0.48 0.115 158);
+  --accent-ink: oklch(0.985 0.004 120);
+  --accent-soft: oklch(0.945 0.028 158);
+  --accent-edge: oklch(0.62 0.09 158);
+
+  /* Semantic money tints (used sparingly on the receipt) */
+  --fee: oklch(0.46 0.085 75);
+  --fee-soft: oklch(0.955 0.03 85);
+  --margin: oklch(0.48 0.115 158);
+  --margin-soft: oklch(0.955 0.028 158);
+
+  /* Status */
+  --danger: oklch(0.5 0.17 27);
+  --danger-soft: oklch(0.96 0.02 27);
+  --stamp: oklch(0.55 0.155 30);
+
+  /* Chips */
+  --chip-draft-bg: oklch(0.945 0.05 90);
+  --chip-draft-ink: oklch(0.42 0.08 80);
+  --chip-paid-bg: oklch(0.93 0.045 158);
+  --chip-paid-ink: oklch(0.38 0.085 155);
+
+  /* Type */
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-body: var(--font-plex-sans), system-ui, sans-serif;
+  --font-num: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
+
+  /* Depth */
+  --shadow-card: 0 1px 2px oklch(0.25 0.02 150 / 0.05), 0 4px 14px oklch(0.25 0.02 150 / 0.05);
+  --shadow-receipt: 0 2px 6px oklch(0.25 0.02 150 / 0.08), 0 18px 40px oklch(0.25 0.02 150 / 0.12);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #101214;
-    --surface: #181b1f;
-    --ink: #e8eaec;
-    --muted: #9aa3ad;
-    --border: #2a2f35;
-    --accent: #34b184;
-    --accent-ink: #0c130f;
-    --danger: #e5484d;
-    --chip-draft-bg: #3a3113;
-    --chip-draft-ink: #e9cf7a;
-    --chip-paid-bg: #143527;
-    --chip-paid-ink: #7fd8a8;
+    --paper: oklch(0.205 0.012 155);
+    --paper-deep: oklch(0.18 0.012 155);
+    --surface: oklch(0.245 0.014 155);
+    --ink: oklch(0.93 0.012 120);
+    --muted: oklch(0.72 0.02 140);
+    --faint: oklch(0.62 0.02 140);
+    --border: oklch(0.335 0.02 152);
+    --border-strong: oklch(0.44 0.025 152);
+
+    --accent: oklch(0.78 0.12 155);
+    --accent-ink: oklch(0.2 0.02 155);
+    --accent-soft: oklch(0.3 0.04 158);
+    --accent-edge: oklch(0.5 0.08 158);
+
+    --fee: oklch(0.8 0.09 80);
+    --fee-soft: oklch(0.3 0.03 85);
+    --margin: oklch(0.78 0.12 155);
+    --margin-soft: oklch(0.3 0.04 158);
+
+    --danger: oklch(0.68 0.16 25);
+    --danger-soft: oklch(0.28 0.05 27);
+    --stamp: oklch(0.72 0.14 30);
+
+    --chip-draft-bg: oklch(0.3 0.045 85);
+    --chip-draft-ink: oklch(0.85 0.07 88);
+    --chip-paid-bg: oklch(0.28 0.045 158);
+    --chip-paid-ink: oklch(0.84 0.08 155);
+
+    --shadow-card: 0 1px 2px oklch(0 0 0 / 0.2), 0 4px 14px oklch(0 0 0 / 0.2);
+    --shadow-receipt: 0 2px 6px oklch(0 0 0 / 0.3), 0 18px 40px oklch(0 0 0 / 0.35);
   }
 }
 
@@ -36,43 +96,122 @@
   margin: 0;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   color: var(--ink);
-  background: var(--paper);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background:
+    radial-gradient(1200px 500px at 85% -10%, var(--accent-soft) 0%, transparent 60%),
+    var(--paper);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- Layout ---------- */
+
 .container {
-  max-width: 1080px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: 2.5rem 1.25rem 4rem;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
+}
+
+/*
+ * Flex/grid items default to min-width:auto and refuse to shrink below a
+ * wide table's min-content — the 320px blowout. Let them shrink so the
+ * tables scroll in place instead.
+ */
+.container > *,
+.stack > *,
+.two-col > *,
+.totals-grid > * {
+  min-width: 0;
 }
 
 .container.narrow {
-  max-width: 640px;
+  max-width: 620px;
 }
+
+@media (max-width: 480px) {
+  .container {
+    padding: 1.5rem 1rem 3rem;
+  }
+}
+
+/* ---------- Masthead ---------- */
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 2px solid var(--ink);
+  position: relative;
 }
 
+.page-header::after {
+  /* Double-rule ledger underline: the masthead sits under an engraved rule. */
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  border-bottom: 1px solid var(--ink);
+}
+
+.page-header h1 {
+  font-family: var(--font-display);
+  font-weight: 560;
+  font-size: clamp(1.6rem, 4.5vw, 2.1rem);
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+}
+
+.kicker {
+  font-family: var(--font-num);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.4rem;
+}
+
+/* ---------- Type ---------- */
+
 h1 {
-  font-size: 1.5rem;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-weight: 560;
+  font-size: 1.6rem;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
 }
 
 h2 {
-  font-size: 1.05rem;
-  margin-bottom: 0.75rem;
+  font-family: var(--font-display);
+  font-weight: 540;
+  font-size: 1.15rem;
   letter-spacing: -0.01em;
+  margin-bottom: 0.75rem;
 }
 
 .muted {
@@ -85,16 +224,21 @@ h2 {
 
 .mono,
 code {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-family: var(--font-num);
   font-size: 0.85em;
 }
+
+/* ---------- Cards ---------- */
 
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1.1rem 1.25rem;
+  border-radius: 12px;
+  padding: 1.25rem 1.35rem;
+  box-shadow: var(--shadow-card);
 }
+
+/* ---------- Stat strip ---------- */
 
 .totals-grid {
   display: grid;
@@ -105,21 +249,25 @@ code {
 .stat {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.3rem;
 }
 
 .stat-label {
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.7rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.09em;
 }
 
 .stat-value {
-  font-size: 1.15rem;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 1.3rem;
+  font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
+
+/* ---------- Grids ---------- */
 
 .two-col {
   display: grid;
@@ -140,7 +288,13 @@ code {
   gap: 1.25rem;
 }
 
-/* Money tables: right-aligned, tabular numerals, receipt-like. */
+/* ---------- Money tables ---------- */
+
+/*
+ * Money tables: right-aligned tabular numerals, hairline rules.
+ * At small widths the table becomes a horizontally scrollable block so a
+ * 320px viewport never overflows the page — the scroll lives in the table.
+ */
 .money-table {
   width: 100%;
   border-collapse: collapse;
@@ -150,110 +304,149 @@ code {
 .money-table th {
   text-align: left;
   color: var(--muted);
-  font-weight: 500;
-  font-size: 0.78rem;
+  font-weight: 600;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.4rem 0.5rem;
-  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.08em;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 2px solid var(--border-strong);
+  white-space: nowrap;
 }
 
 .money-table td {
-  padding: 0.45rem 0.5rem;
+  padding: 0.55rem 0.6rem;
   border-bottom: 1px solid var(--border);
   vertical-align: top;
+}
+
+.money-table tbody tr:hover {
+  background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
 }
 
 .money-table th.num,
 .money-table td.num {
   text-align: right;
   font-variant-numeric: tabular-nums;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-family: var(--font-num);
+  font-size: 0.86em;
 }
 
 .money-table tfoot td {
   font-weight: 600;
+  border-top: 2px solid var(--border-strong);
   border-bottom: none;
+}
+
+@media (max-width: 640px) {
+  .money-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .money {
   white-space: nowrap;
 }
 
+/* ---------- Status chips ---------- */
+
 .chip {
   display: inline-block;
-  padding: 0.1rem 0.55rem;
+  padding: 0.14rem 0.6rem;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-family: var(--font-num);
+  font-size: 0.7rem;
   font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   vertical-align: middle;
+  border: 1px solid transparent;
 }
 
 .chip-draft {
   background: var(--chip-draft-bg);
   color: var(--chip-draft-ink);
+  border-color: color-mix(in srgb, var(--chip-draft-ink) 25%, transparent);
 }
 
 .chip-paid {
   background: var(--chip-paid-bg);
   color: var(--chip-paid-ink);
+  border-color: color-mix(in srgb, var(--chip-paid-ink) 30%, transparent);
 }
 
+/* ---------- Buttons (44px+ touch targets) ---------- */
+
 .btn {
-  display: inline-block;
-  padding: 0.5rem 0.9rem;
-  border-radius: 8px;
-  border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.55rem 1.1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
   background: var(--surface);
   color: var(--ink);
   font: inherit;
   font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
   text-decoration: none;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    transform 100ms ease;
 }
 
 .btn:hover {
-  border-color: var(--muted);
+  border-color: var(--ink);
+}
+
+.btn:active {
+  transform: translateY(1px);
 }
 
 .btn-primary {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-ink);
+  font-weight: 600;
+  box-shadow: 0 1px 2px oklch(0.25 0.02 150 / 0.15);
+}
+
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--accent) 88%, var(--ink));
+  border-color: color-mix(in srgb, var(--accent) 88%, var(--ink));
 }
 
 .btn-ghost {
   border: none;
   background: transparent;
   color: var(--muted);
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.btn-ghost:hover {
+  color: var(--danger);
+  border: none;
 }
 
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
-.line-row {
-  display: grid;
-  grid-template-columns: 1fr 90px 130px auto;
-  gap: 0.75rem;
-  align-items: end;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px dashed var(--border);
-  margin-bottom: 0.75rem;
-}
-
-@media (max-width: 700px) {
-  .line-row {
-    grid-template-columns: 1fr;
-  }
-}
+/* ---------- Forms ---------- */
 
 label {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.35rem;
   font-size: 0.8rem;
+  font-weight: 500;
   color: var(--muted);
 }
 
@@ -261,16 +454,38 @@ input,
 select {
   font: inherit;
   color: var(--ink);
-  background: var(--paper);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 0.45rem 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 0.55rem 0.65rem;
+  min-height: 44px;
 }
 
-.adjust-form {
-  display: flex;
-  flex-direction: column;
+input:hover,
+select:hover {
+  border-color: var(--faint);
+}
+
+/* ---------- Order builder ---------- */
+
+.line-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 130px auto;
   gap: 0.75rem;
+  align-items: end;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px dashed var(--border-strong);
+  margin-bottom: 0.85rem;
+}
+
+@media (max-width: 700px) {
+  .line-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .line-row label:first-child {
+    grid-column: 1 / -1;
+  }
 }
 
 .builder {
@@ -291,19 +506,243 @@ select {
   font-size: 0.9rem;
 }
 
-.invariant {
-  margin-top: 0.75rem;
-  font-size: 0.85rem;
-  color: var(--muted);
+.total-preview strong {
+  font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  font-weight: 600;
 }
 
-.pay-controls {
+/* ---------- Receipt (the hero trust surface) ---------- */
+
+/*
+ * The split receipt as a printed artifact: a sheet of paper with perforated
+ * top and bottom edges, engraved rules, mono figures, and a checksum-style
+ * invariant line. The stamp lands once, rotated, like an inked mark.
+ */
+.receipt {
+  position: relative;
+  background: var(--surface);
+  border: none;
+  border-radius: 0;
+  box-shadow: var(--shadow-receipt);
+  padding: 2.25rem 1.5rem 2rem;
+  overflow: hidden;
+}
+
+.receipt::before,
+.receipt::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background-image: radial-gradient(circle at 6px 0px, transparent 5px, var(--surface) 5px);
+  background-size: 12px 12px;
+  background-repeat: repeat-x;
+  pointer-events: none;
+}
+
+.receipt::before {
+  top: 0;
+}
+
+.receipt::after {
+  bottom: 0;
+  transform: scaleY(-1);
+}
+
+.receipt h2 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  /* Keep the sub clear of the absolutely-positioned stamp. */
+  padding-right: 7.5rem;
+}
+
+.receipt-sub {
+  font-family: var(--font-num);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.receipt .money-table th:first-child,
+.receipt .money-table td:first-child {
+  padding-left: 0;
+}
+
+.receipt .money-table th:last-child,
+.receipt .money-table td:last-child {
+  padding-right: 0;
+}
+
+.receipt .money-table tfoot td {
+  border-top: 2px solid var(--ink);
+}
+
+.receipt td.fee-col {
+  color: var(--fee);
+}
+
+.receipt td.margin-col {
+  color: var(--margin);
+}
+
+.invariant {
   margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed var(--border-strong);
+  font-family: var(--font-num);
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* The inked PAID stamp. Appears once, on paid orders only. */
+.receipt-stamp {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.4rem;
+  transform: rotate(8deg);
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--stamp);
+  border: 2.5px solid var(--stamp);
+  border-radius: 6px;
+  padding: 0.3rem 0.8rem 0.3rem 1rem;
+  opacity: 0.8;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  animation: stamp-in 320ms cubic-bezier(0.2, 1.4, 0.4, 1) 150ms backwards;
+}
+
+@keyframes stamp-in {
+  from {
+    opacity: 0;
+    transform: rotate(8deg) scale(1.6);
+  }
+  to {
+    opacity: 0.8;
+    transform: rotate(8deg) scale(1);
+  }
+}
+
+/* Mobile receipt: stack columns into labeled rows (labels come from
+   data-label attributes; the table semantics stay intact). */
+@media (max-width: 640px) {
+  .receipt {
+    padding: 2rem 1.1rem 1.75rem;
+  }
+
+  .receipt .money-table {
+    display: block;
+    overflow-x: visible;
+  }
+
+  .receipt .money-table thead {
+    display: none;
+  }
+
+  .receipt .money-table tbody tr,
+  .receipt .money-table tfoot tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.1rem 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px dashed var(--border-strong);
+  }
+
+  .receipt .money-table td {
+    display: block;
+    border-bottom: none;
+    padding: 0.1rem 0;
+  }
+
+  .receipt .money-table td:first-child {
+    grid-column: 1 / -1;
+    font-weight: 600;
+    padding-bottom: 0.25rem;
+  }
+
+  .receipt .money-table td:not(:first-child)::before {
+    content: attr(data-label);
+    display: block;
+    font-family: var(--font-num);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .receipt .money-table td:not(:first-child) {
+    text-align: right;
+  }
+
+  .receipt .money-table tfoot tr {
+    border-bottom: none;
+  }
+
+  .receipt .money-table tfoot td:first-child {
+    grid-column: 1 / -1;
+    font-family: var(--font-num);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+}
+
+/* ---------- Pay page ---------- */
+
+.pay-controls {
+  margin-top: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.85rem;
   align-items: flex-start;
+}
+
+.pay-controls .btn-primary {
+  width: 100%;
+  min-height: 52px;
+  font-size: 1rem;
+}
+
+.amount-due {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0 1.25rem;
+  border-bottom: 2px solid var(--ink);
+  margin-bottom: 0.25rem;
+}
+
+.amount-due-label {
+  font-family: var(--font-num);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.amount-due-value {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .check {
@@ -312,16 +751,29 @@ select {
   gap: 0.5rem;
 }
 
+.check input[type="checkbox"] {
+  min-height: 44px;
+  min-width: 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  accent-color: var(--accent);
+}
+
 .message {
   font-size: 0.88rem;
-  padding: 0.6rem 0.8rem;
+  padding: 0.7rem 0.9rem;
   border-radius: 8px;
+  border: 1px solid transparent;
 }
 
 .message.error {
-  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  background: var(--danger-soft);
   color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 30%, transparent);
 }
+
+/* ---------- Copy link ---------- */
 
 .copy-link {
   display: flex;
@@ -331,21 +783,103 @@ select {
 }
 
 .copy-link code {
-  background: var(--paper);
+  background: var(--paper-deep);
   border: 1px solid var(--border);
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
   word-break: break-all;
 }
+
+/* ---------- Inventory events ---------- */
 
 .event-list {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.5rem;
   font-size: 0.88rem;
+}
+
+.event-list .mono {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* ---------- Empty states ---------- */
+
+.empty {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  border: 1px dashed var(--border-strong);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ---------- Footer ---------- */
+
+.app-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  color: var(--faint);
+  font-size: 0.78rem;
+}
+
+/* ---------- Motion (restraint lens) ---------- */
+
+/*
+ * Meanings:
+ * - card settle: "the page has loaded; start reading"
+ * - button press/hover: "this is interactive"
+ * - stamp-in: "this document was just finalized"
+ * Nothing moves after settle. prefers-reduced-motion turns it all off.
+ */
+
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+main > *,
+.stack > *,
+.two-col > * {
+  animation: settle 260ms ease backwards;
+}
+
+main > *:nth-child(2) {
+  animation-delay: 40ms;
+}
+
+main > *:nth-child(3) {
+  animation-delay: 80ms;
+}
+
+main > *:nth-child(n + 4) {
+  animation-delay: 110ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 a {
   color: var(--accent);
+  text-underline-offset: 2px;
 }

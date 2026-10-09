@@ -79,7 +79,7 @@ export function OrderBuilder({ supplements }: { supplements: SupplementOption[] 
   if (supplements.length === 0) {
     return (
       <div className="card">
-        <p className="muted">The catalog is empty — run `npm run db:seed` and reload.</p>
+        <div className="empty">The catalog is empty — run `npm run db:seed` and reload.</div>
       </div>
     );
   }
