@@ -29,6 +29,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
     <main className="container">
       <header className="page-header">
         <div>
+          <span className="kicker">Order</span>
           <h1>
             Order #{order.id} <StatusChip status={order.status} />
           </h1>

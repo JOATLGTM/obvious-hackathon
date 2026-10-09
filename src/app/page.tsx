@@ -18,6 +18,7 @@ export default function DashboardPage() {
     <main className="container">
       <header className="page-header">
         <div>
+          <span className="kicker">Provider console</span>
           <h1>Supplement Ops</h1>
           <p className="muted">In-house ordering and the auditable 75 bps split.</p>
         </div>
@@ -60,7 +61,7 @@ export default function DashboardPage() {
       <section className="card">
         <h2>Sold orders</h2>
         {orders.length === 0 ? (
-          <p className="muted">No orders yet — build one with “New order”.</p>
+          <div className="empty">No orders yet — build one with “New order”.</div>
         ) : (
           <table className="money-table">
             <thead>
@@ -142,7 +143,7 @@ export default function DashboardPage() {
           <section className="card">
             <h2>Recent inventory events</h2>
             {events.length === 0 ? (
-              <p className="muted">No inventory events yet.</p>
+              <div className="empty">No inventory events yet.</div>
             ) : (
               <ul className="event-list">
                 {events.map((e) => (
@@ -156,6 +157,11 @@ export default function DashboardPage() {
           </section>
         </div>
       </div>
+
+      <footer className="app-footer">
+        <span>Splits are persisted at capture and never recomputed.</span>
+        <span>Payments and link delivery are stubbed · US-only slice</span>
+      </footer>
     </main>
   );
 }

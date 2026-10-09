@@ -37,6 +37,7 @@ export default async function PatientPayPage({ params }: { params: Promise<{ tok
   return (
     <main className="container narrow">
       <div className="card">
+        <span className="kicker">Payment request</span>
         <h1>Pay your supplement order</h1>
         <p className="muted">Order #{order.id} from your provider.</p>
         <table className="money-table">
@@ -64,7 +65,7 @@ export default async function PatientPayPage({ params }: { params: Promise<{ tok
           </tbody>
           <tfoot>
             <tr>
-              <td>Amount due</td>
+              <td>Total</td>
               <td />
               <td />
               <td className="num">
@@ -73,6 +74,10 @@ export default async function PatientPayPage({ params }: { params: Promise<{ tok
             </tr>
           </tfoot>
         </table>
+        <div className="amount-due">
+          <span className="amount-due-label">Amount due</span>
+          <span className="amount-due-value">{formatMoney(total)}</span>
+        </div>
         <PayButton orderId={order.id} totalLabel={formatMoney(total)} />
         <p className="muted small">
           STUB: payments run through a fake gateway — no card is collected and no real charge is

@@ -9,10 +9,13 @@ export default function NewOrderPage() {
   return (
     <main className="container">
       <header className="page-header">
-        <h1>Build an order</h1>
-        <p className="muted">
-          Set the patient-facing price per line. Unit COGS is frozen from the catalog at creation.
-        </p>
+        <div>
+          <span className="kicker">Order intake</span>
+          <h1>Build an order</h1>
+          <p className="muted">
+            Set the patient-facing price per line. Unit COGS is frozen from the catalog at creation.
+          </p>
+        </div>
       </header>
       <OrderBuilder
         supplements={supplements.map((s) => ({
