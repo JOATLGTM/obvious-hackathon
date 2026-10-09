@@ -1,116 +1,95 @@
-# In-House Supplement Ordering — Vertical Slice
+# Supplement Ops — in-house ordering with an auditable split
 
-A provider assembles a supplement order for a patient with a patient-facing
-price per item, the patient pays through a stubbed gateway, and the system
-computes and **persists** the money split — item cost (COGS), provider margin,
-and a 75 bps platform fee — so every paid order shows exactly where every cent
-went. Plus a provider dashboard for sales and inventory.
+A vertical slice of in-house supplement ordering for clinical practices: a
+provider assembles an order, the patient pays through a link, and the system
+persists an exact, immutable split of every cent — COGS, provider margin, and a
+75 bps platform fee — plus a dashboard for sales and inventory.
 
-Built as a graded take-home vertical slice: graded on money-handling
-correctness, clean seams, and judgment — not polish or breadth.
+The audit surface is the product: look at a paid order and see exactly where
+every cent went, per line, in integer cents, with `cogs + margin + fee ==
+patient paid` enforced by tests.
 
 ## Run it
 
 ```bash
-python3 -m venv .venv && . .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload          # http://127.0.0.1:8000
-pytest -q                              # 34 tests
+npm install
+npm run setup   # migrate + seed the SQLite database (data/app.db)
+npm run dev     # http://localhost:3000
 ```
 
-The catalog (6 supplements) seeds itself at startup into `app.db`.
-Set `PAYMENT_GATEWAY_MODE=decline` to make every charge decline (test mode).
+Then: **Dashboard → New order** → set patient prices → **Create order** → copy
+the payment link → open it (the patient view) → **Pay**. The paid order renders
+the split receipt.
 
-## The money split — the core of this submission
+## The flow
 
-One pure function, `app/split_engine.py::compute_split`, no I/O:
+| Step | Surface | What happens |
+|---|---|---|
+| 1 | `/orders/new` | Provider picks catalog items, sets per-line patient price, quantity. Unit COGS and the item name are **frozen onto the line at creation**. |
+| 2 | `/orders/{id}` (draft) | Shows the order and an in-app opaque-token payment link. **STUB: delivery** — copy the link by hand; no email is sent. |
+| 3 | `/pay/{token}` | Patient-facing. Pays via the stub gateway. A decline writes nothing; a retry succeeds. |
+| 4 | `/orders/{id}` (paid) | The split receipt, read from persisted `split_entries` — never recomputed. |
+| 5 | `/` (dashboard) | Sold orders, platform totals, inventory, manual adjustments recorded as `inventory_events`. |
 
-```
-fee    = subtotal_cents * 75 // 10000        # 75 bps of subtotal, floored
-margin = subtotal_cents - cogs_cents - fee   # margin absorbs the remainder
-```
+## Money rules
 
-Because margin is defined as the remainder, the identity
-**cogs + fee + margin == amount_paid** holds **by construction** — not by
-reconciliation. No floats anywhere; integer cents end to end.
+- All money is **integer cents** (USD). Floats never touch money.
+- The fee is **75 bps of the patient-paid extended line total**
+  (`unit_price x qty`), `round_half_up` per line. Extending before rounding is
+  the base-consistent choice: 3 x $10.00 pays **23 cents** of fee, not 3 x 8 = 24.
+- Provider **margin is the derived plug**: `margin = paid − cogs − fee`, so the
+  identity `cogs + margin + fee == paid` holds exactly on every line and order.
+  There is no residual bucket.
+- `unit_price_cents` and `unit_cogs_cents` are **frozen at order creation**;
+  catalog edits cannot rewrite history.
+- On capture the split is **persisted once as immutable `split_entries`**; reads
+  never recompute.
+- Capture is **idempotent per order**: at most one successful payment; retries
+  and double-submits return the existing split. A **forced-decline** flag on the
+  pay endpoint models one deterministic failure path: a declined capture leaves
+  the order unpaid with no split entries and no inventory change, and a retry
+  succeeds.
 
-Worked example: subtotal 1333¢, COGS 500¢ → fee floor(1333 × 75 / 10000) = 9¢,
-margin 824¢. 500 + 9 + 824 = 1333. ✓
+## Data model
 
-The split is **persisted at payment time** as three `LedgerEntry` rows written
-in the same DB transaction that marks the order paid and writes the payment
-row — never derived on read. "Show me where every cent went" is a one-query
-answer, and the receipt reads the ledger back.
+Five tables (see `src/db/schema.ts` and `docs/design/supplement-ordering-slice.md`):
 
-## Flow
+- `supplements` — seeded catalog: name, sku, `unit_cogs_cents`, suggested price, stock on hand
+- `orders` — `provider_id` (stubbed auth), `status` (`draft` | `paid`), `channel`, timestamps, opaque `payment_token`
+- `order_items` — qty, frozen `unit_price_cents` / `unit_cogs_cents`, `name_snapshot`
+- `split_entries` — one row per line, written once at capture (immutable)
+- `inventory_events` — append-only deltas with reason, note, and order reference
 
-1. `GET /orders/new` — provider builds the order; per-line patient price.
-   Costs and prices are **snapshotted per line at creation**; later catalog or
-   cost edits never rewrite order history.
-2. `POST /orders/{id}/pay` — charges the stub gateway, then in **one
-   transaction**: order → `paid`, payment row, exactly 3 ledger entries, stock
-   decremented. Double-pay → 409 with no partial writes; insufficient stock →
-   409 with nothing written.
-3. `GET /orders/{id}` — receipt: per-line and per-order split to the cent,
-   negative margin flagged, ledger entries listed.
-4. `GET /dashboard` — GMV processed, platform fees earned, provider margins
-   due, per-paid-order splits, and an inventory table with restock.
+## Stubs (every external system is fake, behind clean seams)
 
-## Decisions and trade-offs
-
-- **Fee basis: 75 bps of the patient-paid subtotal (GMV).** The brief says
-  "75 bps platform fee" without naming the basis; subtotal is what the patient
-  actually pays and matches how card processing is normally quoted. If the
-  business means bps of margin or of COGS, the change is one constant in one
-  pure function.
-- **Rounding: floor, margin absorbs the remainder.** The alternative
-  (banker's rounding) moves at most 1¢ per order and lives in the same
-  function. Defining margin as the remainder makes the audit identity true by
-  construction instead of by reconciliation.
-- **Split persisted as rows, not derived.** A `LedgerEntry` table written in
-  the payment transaction beats storing three columns on the order: the entry
-  descriptions document themselves, and the shape generalizes to more entry
-  types (refunds, adjustments) without a migration.
-- **Negative margin is allowed.** Providers price freely; margin may be zero
-  or negative — the math still balances and the receipt flags it. Blocking it
-  would need a business rule that doesn't exist yet.
-- **Stock checked and decremented inside the payment transaction.** Stock-out
-  rejects the payment with 409 and writes nothing. This is a pragmatic
-  correctness/complexity trade: SQLite serializes writers, so a
-  check-then-decrement in one transaction is atomic here. Postgres at scale
-  would want conditional updates (`UPDATE ... WHERE stock >= qty`) or row
-  locks.
-- **Order-level fee, not per-line.** The fee is computed once on the order
-  subtotal. Per-line fee computation would round per line and the sum could
-  drift from 75 bps of the true subtotal.
-- **FastAPI + SQLAlchemy 2 + SQLite + Jinja.** Production-shaped seams
-  (Protocol-based gateway, app factory, pure-function split engine) without
-  burning the time box on Postgres/Next.js infrastructure the grader never
-  sees.
-
-## What is stubbed
-
-- **Payments** — `payments/gateway.py`: a `PaymentGateway` Protocol plus a
-  `FakePaymentGateway` that succeeds (or declines via the explicit test-mode
-  flag). Swap in a real gateway by implementing the Protocol and setting
-  `app.state.gateway`; no flow code changes.
-- **Auth** — hardcoded demo provider (`Dr. Dana Demo, MD`) and patient
-  (`Riley Vance`), no login.
-- **Email, shipping, taxes** — not built; out of scope for the slice.
-- **Gateway ref is a UUID** — a real gateway's charge id would replace it.
-
-## What was cut
-
-Catalog CRUD UI (seeded catalog only), order editing after creation,
-fulfillment/shipping states beyond `paid`, refunds, auth, pagination, JS
-framework on the frontend (plain server-rendered pages + a little vanilla JS
-in the order builder).
+| Stub | Where | Ceiling |
+|---|---|---|
+| **Payments** | `src/lib/payments.ts` — one-method `PaymentGateway` interface, `StubPaymentGateway` implementation. No card data, no real charge. Deterministic success plus a forced-decline test control. | No real money movement, authorizations, or refunds. |
+| **Link delivery (email)** | `src/components/CopyLink.tsx` — the provider copies the in-app link. | No email sending, no link expiry. |
+| **Auth** | `src/lib/constants.ts` — a fixed `PROVIDER_ID`; `orders.provider_id` exists so the dashboard query has an owner. | No login, no tenant isolation beyond the column. |
+| **Shipping** | Not modeled (out of scope). | — |
 
 ## Tests
 
-`pytest -q` — 34 tests across the split engine (table tests + 500-sample
-invariant property), order lifecycle (draft→paid, double-pay, cancel, decline
-path writes nothing), stock atomicity (decrement, stock-out, partial stock-out
-leaves nothing written), the audit identity (exactly 3 ledger rows summing to
-amount paid), and the API happy path via `TestClient`. CI runs the suite on
-push/PR to main (`.github/workflows/ci.yml`).
+```bash
+npm test
+```
+
+25 tests, table-driven, covering: every money fixture (single line, multi-item,
+the qty-3 extended-rounding canonical case, zero margin, negative margin,
+mid-cent rounding), the `cogs + margin + fee == paid` sum invariant on every
+fixture and across a deterministic pseudo-random sweep, fee boundaries,
+double-capture idempotency, forced-decline-then-retry, capture-time stock
+drift, post-payment catalog edits leaving the split unchanged, stock checks at
+creation, inventory adjustments, and dashboard totals.
+
+## Design doc
+
+`docs/design/supplement-ordering-slice.md` is the binding spec this slice was
+built against — premises, money rules, acceptance criteria, and the deferral
+list (refunds, order lifecycle beyond draft/paid, COGS lots, discounts, patient
+identity/PHI, tenant isolation).
+
+## AI usage
+
+See [AI-USAGE.md](AI-USAGE.md).
