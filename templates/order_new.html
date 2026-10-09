@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}New order{% endblock %}
+{% block content %}
+<div class="card">
+  <h2 style="margin-top:0">Build order</h2>
+  <div class="row" style="margin-bottom:14px">
+    <label>Patient <input id="patient" value="{{ patient_name }}"></label>
+    <label>Provider <input id="provider" value="{{ provider_name }}"></label>
+  </div>
+  <table id="items">
+    <thead><tr><th>Supplement</th><th>Qty</th><th>Patient price (USD)</th><th></th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <p><button type="button" class="secondary" onclick="addRow()">+ Add item</button></p>
+  <div class="row">
+    <button type="button" onclick="submitOrder()">Create order</button>
+    <span class="muted">Unit cost and price are snapshotted per line at creation; later catalog edits never rewrite this order.</span>
+  </div>
+  <div id="err" class="error"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const SUPPLEMENTS = {{ supplements | tojson }};
+
+function addRow() {
+  const tb = document.querySelector('#items tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><select class="supp">${SUPPLEMENTS.map(s =>
+      `<option value="${s.id}">${s.name} &mdash; cost ${(s.unit_cost_cents / 100).toFixed(2)}, stock ${s.stock_qty}</option>`
+    ).join('')}</select></td>
+    <td><input class="qty" type="number" min="1" value="1" style="width:70px"></td>
+    <td><input class="price" type="number" min="0" step="0.01" value="25.00" style="width:110px"></td>
+    <td><button type="button" class="secondary" onclick="this.closest('tr').remove()">Remove</button></td>`;
+  tb.appendChild(tr);
+}
+
+function submitOrder() {
+  const err = document.getElementById('err');
+  err.textContent = '';
+  const items = [...document.querySelectorAll('#items tbody tr')].map(tr => ({
+    supplement_id: Number(tr.querySelector('.supp').value),
+    qty: Math.max(1, Math.round(Number(tr.querySelector('.qty').value) || 1)),
+    // dollars -> integer cents happens exactly once, at this UI boundary;
+    // every downstream step (API, split engine, ledger) is integer cents.
+    unit_price_cents: Math.round(Number(tr.querySelector('.price').value) * 100),
+  }));
+  const payload = {
+    patient_name: document.getElementById('patient').value || 'Demo Patient',
+    provider_name: document.getElementById('provider').value,
+    items,
+  };
+  fetch('/orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+    .then(async r => {
+      if (r.ok) {
+        const order = await r.json();
+        window.location = '/orders/' + order.id;
+      } else {
+        const e = await r.json();
+        err.textContent = typeof e.detail === 'string' ? e.detail : JSON.stringify(e.detail);
+      }
+    })
+    .catch(e => { err.textContent = String(e); });
+}
+
+addRow();
+</script>
+{% endblock %}
