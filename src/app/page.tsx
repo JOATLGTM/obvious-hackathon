@@ -1,95 +1,161 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import Link from "next/link";
+import { getDb } from "@/db";
+import { AdjustInventoryForm } from "@/components/AdjustInventoryForm";
+import { Money } from "@/components/Money";
+import { StatusChip } from "@/components/StatusChip";
+import { listInventoryEvents, listOrders, listSupplements, paidTotals } from "@/lib/orders";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default function DashboardPage() {
+  const db = getDb();
+  const supplements = listSupplements(db);
+  const orders = listOrders(db);
+  const totals = paidTotals(db);
+  const events = listInventoryEvents(db, 8);
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+    <main className="container">
+      <header className="page-header">
+        <div>
+          <h1>Supplement Ops</h1>
+          <p className="muted">In-house ordering and the auditable 75 bps split.</p>
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        <Link className="btn btn-primary" href="/orders/new">
+          New order
+        </Link>
+      </header>
+
+      <section className="totals-grid" aria-label="Sales totals">
+        <div className="card stat">
+          <span className="stat-label">Paid orders</span>
+          <span className="stat-value">{totals.orderCount}</span>
+        </div>
+        <div className="card stat">
+          <span className="stat-label">Patient paid</span>
+          <span className="stat-value">
+            <Money cents={totals.paidCents} />
+          </span>
+        </div>
+        <div className="card stat">
+          <span className="stat-label">COGS</span>
+          <span className="stat-value">
+            <Money cents={totals.cogsCents} />
+          </span>
+        </div>
+        <div className="card stat">
+          <span className="stat-label">Provider margin</span>
+          <span className="stat-value">
+            <Money cents={totals.marginCents} />
+          </span>
+        </div>
+        <div className="card stat">
+          <span className="stat-label">Platform fee</span>
+          <span className="stat-value">
+            <Money cents={totals.feeCents} />
+          </span>
+        </div>
+      </section>
+
+      <section className="card">
+        <h2>Sold orders</h2>
+        {orders.length === 0 ? (
+          <p className="muted">No orders yet — build one with “New order”.</p>
+        ) : (
+          <table className="money-table">
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Status</th>
+                <th className="num">Units</th>
+                <th className="num">Patient total</th>
+                <th className="num">Fee</th>
+                <th className="num">Margin</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((row) => (
+                <tr key={row.order.id}>
+                  <td>
+                    <Link href={`/orders/${row.order.id}`}>#{row.order.id}</Link>
+                  </td>
+                  <td>
+                    <StatusChip status={row.order.status} />
+                  </td>
+                  <td className="num">{row.itemCount}</td>
+                  <td className="num">
+                    <Money cents={row.patientTotalCents} />
+                  </td>
+                  <td className="num">
+                    {row.feeCents === null ? <span className="muted">—</span> : <Money cents={row.feeCents} />}
+                  </td>
+                  <td className="num">
+                    {row.marginCents === null ? (
+                      <span className="muted">—</span>
+                    ) : (
+                      <Money cents={row.marginCents} />
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <p className="muted small">
+          Fee and margin appear once an order is paid and are read from the persisted split — never
+          recomputed.
+        </p>
+      </section>
+
+      <div className="two-col">
+        <section className="card">
+          <h2>Inventory</h2>
+          <table className="money-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>SKU</th>
+                <th className="num">Unit COGS</th>
+                <th className="num">On hand</th>
+              </tr>
+            </thead>
+            <tbody>
+              {supplements.map((s) => (
+                <tr key={s.id}>
+                  <td>{s.name}</td>
+                  <td className="mono">{s.sku}</td>
+                  <td className="num">
+                    <Money cents={s.unitCogsCents} />
+                  </td>
+                  <td className="num">{s.stockOnHand}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+
+        <div className="stack">
+          <section className="card">
+            <h2>Manual inventory adjustment</h2>
+            <AdjustInventoryForm supplements={supplements.map((s) => ({ id: s.id, name: s.name }))} />
+          </section>
+          <section className="card">
+            <h2>Recent inventory events</h2>
+            {events.length === 0 ? (
+              <p className="muted">No inventory events yet.</p>
+            ) : (
+              <ul className="event-list">
+                {events.map((e) => (
+                  <li key={e.id}>
+                    <span className="mono">{e.delta > 0 ? `+${e.delta}` : e.delta}</span>{" "}
+                    {e.supplementName} <span className="muted">— {e.reason}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      </div>
+    </main>
   );
 }
