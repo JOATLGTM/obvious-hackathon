@@ -1,0 +1,20 @@
+# .obvious/config.yml — default repository policy
+#
+# Auto-detected from GitHub at onboarding time (2026-10-09):
+#   - Repository was empty; no default branch existed yet. 'main' was bootstrapped
+#     by the setup PR and GitHub sets it as the default on first push.
+#   - Merge methods enabled on the repo: merge commit, squash, rebase (all true).
+#   - delete_branch_on_merge is currently false on GitHub.
+
+# Branch policy
+default_branch: main
+
+# Merge policy — 'squash' keeps a clean linear history for a young repo; all three
+# methods are enabled on GitHub, so change here if the team prefers otherwise.
+merge_method: squash
+
+# Mirror of the current GitHub setting (delete_branch_on_merge: false).
+delete_branch_on_merge: false
+
+# Setup PRs are a human review gate: never auto-merge autobuild setup PRs.
+require_human_merge: true
