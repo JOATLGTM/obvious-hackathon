@@ -80,6 +80,9 @@ export function computeSplitLine(input: SplitLineInput): SplitLine {
 
 /** Compute the full split for an order's lines. Pure; persists nothing. */
 export function computeSplit(inputs: SplitLineInput[]): Split {
+  if (inputs.length === 0) {
+    throw new Error("computeSplit requires at least one line");
+  }
   const lines = inputs.map(computeSplitLine);
   const totals = lines.reduce<SplitTotals>(
     (acc, l) => ({
