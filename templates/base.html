@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Supplement Orders{% endblock %}</title>
+<style>
+  :root { --ink:#1a2233; --muted:#667085; --line:#e4e7ec; --accent:#175cd3; --good:#067647; --bad:#b42318; --bg:#f7f8fa; }
+  * { box-sizing: border-box; }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; margin:0; background:var(--bg); color:var(--ink); }
+  header.site { background:#fff; border-bottom:1px solid var(--line); padding:14px 28px; display:flex; align-items:baseline; gap:18px; }
+  header.site h1 { font-size:17px; margin:0; }
+  header.site nav a { color:var(--accent); text-decoration:none; font-size:14px; margin-right:12px; }
+  main { max-width: 980px; margin: 28px auto; padding: 0 20px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:10px; padding:20px 24px; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); }
+  th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+  td.num, th.num { text-align:right; font-variant-numeric: tabular-nums; }
+  .muted { color:var(--muted); }
+  .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:600; }
+  .badge.draft { background:#fef0c7; color:#93370d; }
+  .badge.paid { background:#d1fadf; color:#054f31; }
+  .badge.cancelled { background:#fee4e2; color:#912018; }
+  .badge.warn { background:#fee4e2; color:#912018; }
+  .identity { font-family: ui-monospace, SFMono-Regular, monospace; background:#f2f6ff; border:1px solid #d5e2ff; padding:10px 12px; border-radius:8px; }
+  button { background:var(--accent); color:#fff; border:0; border-radius:8px; padding:8px 14px; font-size:14px; cursor:pointer; }
+  button.secondary { background:#eef2f6; color:var(--ink); }
+  input, select { padding:7px 9px; border:1px solid var(--line); border-radius:8px; font-size:14px; }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .error { color:var(--bad); margin-top:10px; font-size:14px; min-height:18px; }
+  .kpi { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px; }
+  .kpi .card { flex:1; min-width:180px; margin-bottom:0; }
+  .kpi .label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+  .kpi .value { font-size:24px; font-weight:700; margin-top:6px; font-variant-numeric: tabular-nums; }
+  h2 { font-size:19px; } h3 { font-size:16px; } h4 { font-size:14px; margin-bottom:6px; }
+</style>
+</head>
+<body>
+<header class="site">
+  <h1>Supplement Orders &mdash; demo clinic</h1>
+  <nav><a href="/orders/new">New order</a><a href="/dashboard">Dashboard</a></nav>
+</header>
+<main>{% block content %}{% endblock %}</main>
+{% block scripts %}{% endblock %}
+</body>
+</html>
